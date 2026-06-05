@@ -7,7 +7,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: seo-analyzer-api
+  API_IMAGE: seo-analyzer-api
+  WEB_IMAGE: seo-analyzer-web
 
 permissions:
   contents: read
@@ -35,8 +36,20 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.API_IMAGE }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.API_IMAGE }}:${{ github.sha }}
+
+      - name: Build and push Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.WEB_IMAGE }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.WEB_IMAGE }}:${{ github.sha }}
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.2.0
@@ -48,7 +61,8 @@ jobs:
             set -e
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             cd /opt/production/aftab
-            export DOCKER_IMAGE=ghcr.io/${{ github.repository_owner }}/seo-analyzer-api:latest
-            docker compose -f docker-compose.prod.yml pull api
-            docker compose -f docker-compose.prod.yml up -d api
+            export DOCKER_IMAGE_API=ghcr.io/${{ github.repository_owner }}/seo-analyzer-api:latest
+            export DOCKER_IMAGE_WEB=ghcr.io/${{ github.repository_owner }}/seo-analyzer-web:latest
+            docker compose -f docker-compose.prod.yml pull api web
+            docker compose -f docker-compose.prod.yml up -d api web
             docker image prune -f

@@ -1,18 +1,36 @@
-# Production compose on VPS — Postgres/Redis run separately (or use docker-compose.yml)
-# DOCKER_IMAGE is set by deploy workflow, e.g. ghcr.io/aftab-alam-devops/seo-analyzer-api:latest
+# Production on VPS — API + Web (Nginx). Postgres/Redis run separately.
+# Set DOCKER_IMAGE_API and DOCKER_IMAGE_WEB in .env or via deploy workflow exports.
 
 services:
   api:
-    image: ${DOCKER_IMAGE}
+    image: ${DOCKER_IMAGE_API}
     container_name: seo_analyzer_api
     restart: unless-stopped
-    ports:
-      - "8000:8000"
     env_file:
       - .env
+    expose:
+      - "8000"
+    networks:
+      - seo_net
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')\""]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  web:
+    image: ${DOCKER_IMAGE_WEB}
+    container_name: seo_analyzer_web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-80}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - seo_net
+
+networks:
+  seo_net:
+    driver: bridge

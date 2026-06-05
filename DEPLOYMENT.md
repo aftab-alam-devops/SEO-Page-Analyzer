@@ -606,20 +606,29 @@ git push -u origin main
 | `VPS_HOST` | VPS IP or hostname |
 | `VPS_USER` | SSH user (e.g. `root`, `ubuntu`) |
 | `VPS_SSH_KEY` | Private SSH key (full PEM contents) |
+| `VITE_API_URL` | Optional. Leave **empty** so Nginx proxies `/api` to the API container. Set only if the UI calls a separate API domain. |
 
 ### VPS setup before first deploy
 
 ```bash
-sudo mkdir -p /opt/seo-analyzer
-cd /opt/seo-analyzer
+sudo mkdir -p /opt/production/aftab   # or your deploy path in deploy.yml
+cd /opt/production/aftab
 git clone https://github.com/aftab-alam-devops/seo-analyzer.git .
-cp backend/.env.example backend/.env   # edit with production DATABASE_URL, REDIS_URL, keys
-echo "DOCKER_IMAGE=ghcr.io/aftab-alam-devops/seo-analyzer-api:latest" >> .env
+cp backend/.env.example .env          # edit DATABASE_URL, REDIS_URL, OPENROUTER_API_KEY, CORS_ORIGINS
 ```
 
-Postgres and Redis must be reachable from the API container using `backend/.env`. The workflow builds `backend/Dockerfile` and runs `docker compose -f docker-compose.prod.yml up -d api`.
+Set `CORS_ORIGINS` to your public site URL (e.g. `http://YOUR_VPS_IP` or `https://yourdomain.com`).
 
-Deploy the **frontend** separately (Nginx static host or Vercel) with `VITE_API_URL` pointing at your API.
+Postgres and Redis must be reachable from the API container (use Docker service name or `host.docker.internal`, not `localhost`).
+
+The workflow builds **two images** and runs `docker compose -f docker-compose.prod.yml up -d api web`:
+
+| Container | Image | Port |
+|-----------|-------|------|
+| `seo_analyzer_api` | `ghcr.io/aftab-alam-devops/seo-analyzer-api` | internal `:8000` |
+| `seo_analyzer_web` | `ghcr.io/aftab-alam-devops/seo-analyzer-web` | public `:80` |
+
+Open **http://YOUR_VPS_IP** — Nginx serves the React app and proxies `/api` to the backend.
 
 ---
 
@@ -628,9 +637,11 @@ Deploy the **frontend** separately (Nginx static host or Vercel) with `VITE_API_
 | File | Purpose |
 |------|---------|
 | `README.md` | Project overview and feature list |
-| `.github/workflows/deploy.yml` | Build API image, push to GHCR, deploy VPS |
-| `docker-compose.prod.yml` | Production API service on VPS |
+| `.github/workflows/deploy.yml` | Build API + Web images, push to GHCR, deploy VPS |
+| `docker-compose.prod.yml` | Production API + Nginx web on VPS |
 | `backend/Dockerfile` | API container image |
+| `frontend/Dockerfile` | Nginx + React static build |
+| `frontend/nginx.conf` | SPA routing + `/api` reverse proxy |
 | `docker-compose.yml` | Local Postgres + Redis |
 | `backend/.env.example` | Backend env template |
 | `frontend/.env.example` | Frontend env template |
