@@ -8,8 +8,6 @@ services:
       POSTGRES_USER: seo_user
       POSTGRES_PASSWORD: seo_password
       POSTGRES_DB: seo_analyzer
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,8 +20,6 @@ services:
     image: redis:7-alpine
     container_name: seo_redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -61,7 +57,7 @@ services:
     container_name: seo_analyzer_web
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "5077:80"
     depends_on:
       api:
         condition: service_healthy
