@@ -61,6 +61,13 @@ jobs:
             set -e
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             cd /opt/production/aftab
+            if [ -d .git ]; then
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              echo "ERROR: /opt/production/aftab is not a git repo. Run: git clone https://github.com/${{ github.repository }}.git ."
+              exit 1
+            fi
             export DOCKER_IMAGE_API=ghcr.io/${{ github.repository_owner }}/seo-analyzer-api:latest
             export DOCKER_IMAGE_WEB=ghcr.io/${{ github.repository_owner }}/seo-analyzer-web:latest
             docker compose -f docker-compose.prod.yml pull api web
