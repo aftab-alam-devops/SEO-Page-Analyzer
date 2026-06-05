@@ -81,38 +81,20 @@ For production environments, ensure the following practices are followed:
 3.  **Prometheus Privacy**:
     *   Prometheus (port `9090`) is configured internal-only in `docker-compose.prod.yml`. Grafana serves as the secure visual portal.
 
----
+## 🔑 SSL & Reverse Proxy Setup (Behind Pre-existing Host Nginx)
 
-## 🔑 SSL Certificate Setup (Let's Encrypt)
+Since your VPS already has a global Nginx container/service running on ports `80` and `443` managing SSL, this application is configured to run on a unique host port (**`5077`**) to prevent conflicts.
 
-To secure traffic to `https://aftab-fastapi.duckdns.org` using SSL, you can run **Certbot** on the VPS.
+The global Nginx on the host VPS serves as the entry point and routes traffic to the container.
 
-### 1. Install Certbot on the Host VPS
-```bash
-sudo apt-get update
-sudo apt-get install certbot -y
-```
+### 1. Verification of Ports
+In the production environment ([docker-compose.prod.yml](file:///c:/Users/Aftab%20Alam/OneDrive/Desktop/seo%20analyzer/seo-analyzer/docker-compose.prod.yml)):
+*   The `web` (frontend) container maps **`5077:80`** to the host.
+*   The `postgres`, `redis`, `api`, `prometheus`, and `grafana` ports are kept entirely internal (no host port exposure) to prevent conflicts with other services on your VPS.
 
-### 2. Generate the SSL Certificates
-Run Certbot in standalone mode (make sure Docker container on port 80 is temporarily stopped):
-```bash
-docker compose -f docker-compose.prod.yml down
-sudo certbot certonly --standalone -d aftab-fastapi.duckdns.org
-```
+### 2. Configure Host Nginx Server Block
+On your host VPS, update your Nginx configuration (e.g., `/etc/nginx/sites-available/default` or similar host Nginx server block) to reverse-proxy traffic to your SEO Page Analyzer container:
 
-### 3. Mount Certificates to Nginx Web Container
-Once generated, the certificates will be located in `/etc/letsencrypt/live/aftab-fastapi.duckdns.org/`.
-Update your `docker-compose.prod.yml` to mount the certificate volumes into the `web` container:
-```yaml
-  web:
-    image: ${DOCKER_IMAGE_WEB}
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-```
-Then configure your Nginx config to listen on port `443` and use the SSL certs:
 ```nginx
 server {
     listen 80;
@@ -127,16 +109,27 @@ server {
     ssl_certificate /etc/letsencrypt/live/aftab-fastapi.duckdns.org/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/aftab-fastapi.duckdns.org/privkey.pem;
 
-    location /api/ {
-        proxy_pass http://api:8000;
-        ...
-    }
+    # Forward all traffic to the containerized application on port 5077
     location / {
-        try_files $uri $uri/ /index.html;
+        proxy_pass http://127.0.0.1:5077;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Enable websockets (optional but good practice)
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 }
 ```
-Restart the stack:
+
+### 3. Reload Host Nginx
+Apply the changes on your VPS Nginx server:
 ```bash
-docker compose -f docker-compose.prod.yml up -d
+sudo nginx -t
+sudo systemerctl reload nginx # or: docker exec nginx nginx -s reload
 ```
+Once reloaded, your host Nginx will handle the SSL handshake for `aftab-fastapi.duckdns.org` and forward request streams cleanly to the container on port `5077`.
+
