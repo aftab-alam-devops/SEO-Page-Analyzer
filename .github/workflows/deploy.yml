@@ -80,5 +80,5 @@ jobs:
             export DOCKER_IMAGE_API=ghcr.io/${{ github.repository_owner }}/seo-analyzer-api:latest
             export DOCKER_IMAGE_WEB=ghcr.io/${{ github.repository_owner }}/seo-analyzer-web:latest
             docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
             docker image prune -f
