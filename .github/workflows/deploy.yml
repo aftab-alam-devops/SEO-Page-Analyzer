@@ -51,6 +51,15 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.WEB_IMAGE }}:latest
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.WEB_IMAGE }}:${{ github.sha }}
 
+      - name: Copy compose file to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: docker-compose.prod.yml
+          target: /opt/production/aftab/
+
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -61,13 +70,6 @@ jobs:
             set -e
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             cd /opt/production/aftab
-            if [ -d .git ]; then
-              git fetch origin main
-              git reset --hard origin/main
-            else
-              echo "ERROR: /opt/production/aftab is not a git repo. Run: git clone https://github.com/${{ github.repository }}.git ."
-              exit 1
-            fi
             export DOCKER_IMAGE_API=ghcr.io/${{ github.repository_owner }}/seo-analyzer-api:latest
             export DOCKER_IMAGE_WEB=ghcr.io/${{ github.repository_owner }}/seo-analyzer-web:latest
             docker compose -f docker-compose.prod.yml pull api web
