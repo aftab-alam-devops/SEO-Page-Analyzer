@@ -10,7 +10,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleScan = async (e: React.FormEvent) => {
+  const handleScan = async (e) => {
     e.preventDefault();
     setError("");
     if (!url.trim()) {
@@ -22,7 +22,7 @@ export default function Home() {
       const { job_id } = await startScan(url.trim());
       navigate(`/scan/${job_id}`, { state: { url: url.trim() } });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start scan");
+      setError(err.message || "Failed to start scan");
     } finally {
       setLoading(false);
     }
@@ -41,8 +41,6 @@ export default function Home() {
         transition={{ duration: 0.6 }}
         className="relative z-10 w-full max-w-3xl text-center"
       >
-      
-
         <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4">
           Analyze any page&apos;s{" "}
           <span className="gradient-text">SEO health</span>

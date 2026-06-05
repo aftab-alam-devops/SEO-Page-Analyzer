@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import type { LucideIcon } from "lucide-react";
 
 export default function MetricCard({
   icon: Icon,
@@ -7,12 +6,6 @@ export default function MetricCard({
   value,
   sub,
   status,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string | number;
-  sub?: string;
-  status?: "good" | "warn" | "bad";
 }) {
   const border =
     status === "good"

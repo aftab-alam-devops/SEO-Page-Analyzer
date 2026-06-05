@@ -3,10 +3,9 @@ import { ArrowRight, Calendar, ExternalLink, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { listReports } from "../api";
-import type { ReportListItem } from "../types";
 
 export default function Reports() {
-  const [reports, setReports] = useState<ReportListItem[]>([]);
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

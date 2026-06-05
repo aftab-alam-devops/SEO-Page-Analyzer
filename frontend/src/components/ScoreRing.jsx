@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-export default function ScoreRing({ score }: { score: number }) {
+export default function ScoreRing({ score }) {
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;

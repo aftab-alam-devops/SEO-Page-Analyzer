@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { BarChart3, FileText, Search } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children }) {
   const location = useLocation();
 
   return (
@@ -42,11 +42,6 @@ function NavLink({
   icon,
   label,
   active,
-}: {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-  active: boolean;
 }) {
   return (
     <Link

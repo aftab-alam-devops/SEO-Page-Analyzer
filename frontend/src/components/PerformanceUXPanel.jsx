@@ -1,8 +1,7 @@
 import { motion } from "framer-motion";
 import { Gauge, Zap } from "lucide-react";
-import type { PerformanceUXReview } from "../types";
 
-const STATUS_STYLES: Record<string, { dot: string; text: string }> = {
+const STATUS_STYLES = {
   best: { dot: "bg-brand-400", text: "text-brand-300" },
   good: { dot: "bg-emerald-400", text: "text-emerald-300" },
   warning: { dot: "bg-amber-400", text: "text-amber-300" },
@@ -10,7 +9,7 @@ const STATUS_STYLES: Record<string, { dot: string; text: string }> = {
   critical: { dot: "bg-red-400", text: "text-red-300" },
 };
 
-export default function PerformanceUXPanel({ data }: { data: PerformanceUXReview }) {
+export default function PerformanceUXPanel({ data }) {
   const overall = STATUS_STYLES[data.overall_rating] ?? STATUS_STYLES.good;
 
   return (
@@ -37,7 +36,7 @@ export default function PerformanceUXPanel({ data }: { data: PerformanceUXReview
         </div>
         <div className="rounded-xl bg-black/30 border border-white/5 p-4">
           <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-            <Zap className="w-3 h-3" /> Response time
+            <Zap className="w-3.5 h-3.5" /> Response time
           </p>
           <p className="text-lg font-semibold text-white">{data.response_time_ms.toFixed(0)} ms</p>
           <p className={`text-xs capitalize ${STATUS_STYLES[data.response_rating]?.text ?? ""}`}>

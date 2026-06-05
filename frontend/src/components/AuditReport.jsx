@@ -1,12 +1,8 @@
 import { motion } from "framer-motion";
 import { CheckCircle2, AlertTriangle, AlertCircle, ThumbsUp, Star, Copy, Check } from "lucide-react";
 import { useState } from "react";
-import type { AIAnalysis, AuditSeverity, SEOFinding } from "../types";
 
-const SECTION_CONFIG: Record<
-  AuditSeverity,
-  { label: string; icon: typeof AlertTriangle; border: string; bg: string; text: string; badge: string }
-> = {
+const SECTION_CONFIG = {
   critical: {
     label: "Critical",
     icon: AlertTriangle,
@@ -49,9 +45,9 @@ const SECTION_CONFIG: Record<
   },
 };
 
-const ORDER: AuditSeverity[] = ["critical", "warning", "bad", "good", "best"];
+const ORDER = ["critical", "warning", "bad", "good", "best"];
 
-function CopyBtn({ text }: { text: string }) {
+function CopyBtn({ text }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -69,7 +65,7 @@ function CopyBtn({ text }: { text: string }) {
   );
 }
 
-function FindingCard({ finding }: { finding: SEOFinding }) {
+function FindingCard({ finding }) {
   return (
     <div className="rounded-xl border border-white/5 bg-surface-800/60 p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
@@ -115,9 +111,6 @@ function FindingCard({ finding }: { finding: SEOFinding }) {
 function SectionBlock({
   severity,
   findings,
-}: {
-  severity: AuditSeverity;
-  findings: SEOFinding[];
 }) {
   if (!findings.length) return null;
   const cfg = SECTION_CONFIG[severity];
@@ -145,7 +138,7 @@ function SectionBlock({
   );
 }
 
-export default function AuditReport({ ai }: { ai: AIAnalysis }) {
+export default function AuditReport({ ai }) {
   const sections = ai.sections;
   const sug = ai.suggestions;
   const hasSections =

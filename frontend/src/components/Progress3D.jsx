@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 const DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const LINE_H = 1.15;
 
-export function RollingDigit({ value }: { value: number }) {
+export function RollingDigit({ value }) {
   const digit = Math.min(9, Math.max(0, value));
   return (
     <div className="relative h-[1.15em] w-[0.7em] overflow-hidden">
@@ -25,7 +25,7 @@ export function RollingDigit({ value }: { value: number }) {
   );
 }
 
-export function ProgressOdometer({ value }: { value: number }) {
+export function ProgressOdometer({ value }) {
   const clamped = Math.min(100, Math.max(0, Math.round(value)));
   const chars = String(clamped).padStart(3, "0").split("");
 
@@ -56,7 +56,7 @@ export function ProgressOdometer({ value }: { value: number }) {
   );
 }
 
-export function Ring3D({ progress }: { progress: number }) {
+export function Ring3D({ progress }) {
   const circumference = 2 * Math.PI * 88;
   const offset = circumference - (progress / 100) * circumference;
 
@@ -106,7 +106,7 @@ export function Ring3D({ progress }: { progress: number }) {
   );
 }
 
-export function RollingMessage3D({ message }: { message: string }) {
+export function RollingMessage3D({ message }) {
   return (
     <div className="h-14 overflow-hidden relative" style={{ perspective: "600px" }}>
       <AnimatePresence mode="wait">
@@ -126,7 +126,7 @@ export function RollingMessage3D({ message }: { message: string }) {
   );
 }
 
-export function CylinderProgressBar({ progress }: { progress: number }) {
+export function CylinderProgressBar({ progress }) {
   const segments = 24;
   return (
     <div className="flex gap-0.5 sm:gap-1 justify-center items-end h-10" style={{ perspective: "350px" }}>
@@ -162,11 +162,6 @@ export function StepCard3D({
   detail,
   status,
   index,
-}: {
-  label: string;
-  detail?: string | null;
-  status: string;
-  index: number;
 }) {
   const isDone = status === "done";
   const isRunning = status === "running";

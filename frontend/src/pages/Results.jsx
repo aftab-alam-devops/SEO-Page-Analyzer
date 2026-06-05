@@ -28,13 +28,12 @@ import MetricCard from "../components/MetricCard";
 import PerformanceUXPanel from "../components/PerformanceUXPanel";
 import SearchIntentPanel from "../components/SearchIntentPanel";
 import ScoreRing from "../components/ScoreRing";
-import type { Report } from "../types";
 
 const CHART_COLORS = ["#14b8a6", "#2dd4bf", "#5eead4", "#0d9488", "#0f766e", "#115e59"];
 
 export default function Results() {
-  const { reportId } = useParams<{ reportId: string }>();
-  const [report, setReport] = useState<Report | null>(null);
+  const { reportId } = useParams();
+  const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 

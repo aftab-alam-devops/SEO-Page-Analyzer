@@ -9,7 +9,6 @@ import {
   Scene3DBackground,
   StepCard3D,
 } from "../components/Progress3D";
-import type { ScanProgress as ScanProgressType } from "../types";
 
 const ROLLING_MESSAGES = [
   "Connecting to target server...",
@@ -25,7 +24,7 @@ const ROLLING_MESSAGES = [
   "Generating your SEO report...",
 ];
 
-const STEP_MESSAGES: Record<string, number> = {
+const STEP_MESSAGES = {
   fetch: 0,
   technical: 2,
   content: 5,
@@ -35,9 +34,9 @@ const STEP_MESSAGES: Record<string, number> = {
 };
 
 export default function ScanProgressPage() {
-  const { jobId } = useParams<{ jobId: string }>();
+  const { jobId } = useParams();
   const navigate = useNavigate();
-  const [progress, setProgress] = useState<ScanProgressType | null>(null);
+  const [progress, setProgress] = useState(null);
   const [messageIndex, setMessageIndex] = useState(0);
 
   const pct = progress?.progress ?? 0;

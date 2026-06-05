@@ -27,7 +27,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push API image
         uses: docker/build-push-action@v6
@@ -46,7 +46,7 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           build-args: |
-            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_API_URL=
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.WEB_IMAGE }}:latest
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.WEB_IMAGE }}:${{ github.sha }}
@@ -68,10 +68,17 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            mkdir -p /opt/production/aftab
             cd /opt/production/aftab
+            echo "DATABASE_URL=postgresql://seo_user:seo_password@postgres:5432/seo_analyzer" > .env
+            echo "REDIS_URL=redis://redis:6379/0" >> .env
+            echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env
+            echo "OPENROUTER_MODEL=google/gemini-2.0-flash-001" >> .env
+            echo "CORS_ORIGINS=https://aftab-fastapi.duckdns.org,http://aftab-fastapi.duckdns.org,http://35.174.167.153,http://localhost:5173" >> .env
+            echo "APP_NAME=SEO Page Analyzer" >> .env
             export DOCKER_IMAGE_API=ghcr.io/${{ github.repository_owner }}/seo-analyzer-api:latest
             export DOCKER_IMAGE_WEB=ghcr.io/${{ github.repository_owner }}/seo-analyzer-web:latest
-            docker compose -f docker-compose.prod.yml pull api web
-            docker compose -f docker-compose.prod.yml up -d api web
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
             docker image prune -f
