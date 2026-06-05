@@ -58,6 +58,8 @@ services:
     restart: unless-stopped
     ports:
       - "5077:80"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       api:
         condition: service_healthy
