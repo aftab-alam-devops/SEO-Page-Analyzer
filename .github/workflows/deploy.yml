@@ -51,13 +51,13 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.WEB_IMAGE }}:latest
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.WEB_IMAGE }}:${{ github.sha }}
 
-      - name: Copy compose file to VPS
+      - name: Copy compose file and configs to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: docker-compose.prod.yml
+          source: "docker-compose.prod.yml,prometheus/,grafana/"
           target: /opt/production/aftab/
 
       - name: Deploy to VPS
