@@ -4,7 +4,7 @@ A high-performance, containerized full-stack SEO analysis application. Enter any
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 Tech Stack 1
 
 *   **Frontend**: React, Vite (Vanilla JS/JSX), Tailwind CSS, served via **Nginx** reverse proxy.
 *   **Backend**: **FastAPI** (Python), SQLAlchemy, httpx, BeautifulSoup4.
