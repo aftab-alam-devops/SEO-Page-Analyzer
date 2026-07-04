@@ -1,0 +1,85 @@
+name: Deploy Backend & Monitoring to AWS EKS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'helm/backend/**'
+      - 'helm/monitoring/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
+  ECR_REPO_NAME: seo-analyzer-backend
+
+jobs:
+  deploy-backend:
+    name: Build & Deploy Backend & Monitoring
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Connect to AWS using Access Keys
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      # Login to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Build and Push Backend Docker Image
+      - name: Build, Tag, and Push Backend Image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/$ECR_REPO_NAME:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPO_NAME:latest \
+            ./backend
+          
+          docker push $ECR_REGISTRY/$ECR_REPO_NAME:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPO_NAME:latest
+
+      # Install/Configure kubectl
+      - name: Set up Kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      # Deploy Backend via Helm (Uses values overrides for ECR Image and DB auth config)
+      - name: Deploy Backend via Helm
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # We deploy the backend Helm release.
+          # We check if an external RDS database should be used via variables, or fallback to default internal DB.
+          helm upgrade --install backend ./helm/backend \
+            --namespace default \
+            --set image.repository=$ECR_REGISTRY/$ECR_REPO_NAME \
+            --set image.tag=$IMAGE_TAG \
+            --set openrouterApiKey="${{ secrets.OPENROUTER_API_KEY }}" \
+            --set service.type=LoadBalancer
+
+      # Deploy Monitoring (Prometheus & Grafana) via Helm
+      - name: Deploy Monitoring via Helm
+        run: |
+          helm upgrade --install monitoring ./helm/monitoring \
+            --namespace default \
+            --set prometheus.server.service.type=ClusterIP \
+            --set grafana.service.type=LoadBalancer
