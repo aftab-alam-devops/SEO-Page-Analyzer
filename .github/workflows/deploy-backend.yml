@@ -17,7 +17,7 @@ permissions:
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
-  ECR_REPO_NAME: seo-analyzer-backend
+  ECR_REPO_NAME: backend
 
 jobs:
   deploy-backend:
